@@ -33,8 +33,8 @@ public class GUI {
                     ArrayList<Long> list = new ArrayList<>();
 
                     for (long i = 1; i<=Math.sqrt(finalNumber); i++) {
-                        float progress = (float) i / finalNumber * 100;
-                        progressBar.setValue((int) progress / 2);
+                        float progress = (float) i / (float) Math.sqrt(finalNumber) * 100;
+                        progressBar.setValue((int)  progress);
 
                         if (finalNumber % i == 0) {
                             list.add(i);
@@ -47,10 +47,6 @@ public class GUI {
                     Collections.sort(list);
 
                     for(int i = 0; i<=list.size()-1 ; i++) {
-                        float progress = (float) i / list.size() * 100;
-                        progressBar.setValue((int) progress / 2);
-                        this.progressBar.setValue((int) progress);
-
                         Vector<String> row = new Vector<>();
                         row.add(String.valueOf(list.get(i)));
                         tableModel.addRow(row);
