@@ -3,6 +3,7 @@ import javax.swing.table.DefaultTableModel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Vector;
+import java.util.concurrent.ExecutionException;
 
 public class GUI {
 
@@ -18,54 +19,72 @@ public class GUI {
 
     public GUI() {
         calcBtn.addActionListener(action -> {
-            this.progressBar.setValue(0);
+            progressBar.setValue(0);
 
-            try{
+            // disable Button
+            calcBtn.setEnabled(false);
+
+            // clear table
+            tableModel.setRowCount(0);
+
+            try {
                 final long finalNumber = Long.parseLong(numInput.getText());
+                startThread(finalNumber);
+            }
+            catch(NumberFormatException e) {
+                JOptionPane.showMessageDialog(this.panel1, "Die Eingabe ist ungültig");
+                calcBtn.setEnabled(true);
+            }
+        });
+    }
 
-                Runnable runnable = () -> {
-                    // disable Button
-                    calcBtn.setEnabled(false);
+    private void startThread(Long finalNumber) {
+        SwingWorker sw = new SwingWorker() {
+            @Override
+            protected ArrayList<Long> doInBackground() throws Exception {
+                ArrayList<Long> list = new ArrayList<>();
 
-                    // clear table
-                    tableModel.setRowCount(0);
+                for (long i = 1; i <= Math.sqrt(finalNumber); i++) {
+                    float progress = (float) i / (float) Math.sqrt(finalNumber) * 100;
+                    progressBar.setValue((int) progress);
 
-                    ArrayList<Long> list = new ArrayList<>();
+                    if (finalNumber % i == 0) {
+                        list.add(i);
 
-                    for (long i = 1; i<=Math.sqrt(finalNumber); i++) {
-                        float progress = (float) i / (float) Math.sqrt(finalNumber) * 100;
-                        progressBar.setValue((int)  progress);
-
-                        if (finalNumber % i == 0) {
-                            list.add(i);
-
-                            if(finalNumber / i != i)
-                                list.add(finalNumber / i);
-                        }
+                        if (finalNumber / i != i)
+                            list.add(finalNumber / i);
                     }
+                }
+
+                return list;
+            }
+
+            @Override
+            protected void done() {
+                ArrayList list = null;
+                try {
+                    list = (ArrayList) get();
 
                     Collections.sort(list);
 
-                    for(int i = 0; i<=list.size()-1 ; i++) {
+                    for (int i = 0; i <= list.size() - 1; i++) {
                         Vector<String> row = new Vector<>();
                         row.add(String.valueOf(list.get(i)));
                         tableModel.addRow(row);
                     }
 
-                    this.progressBar.setValue(100);
+                    progressBar.setValue(100);
                     calcBtn.setEnabled(true);
-                };
-
-                Thread thread = new Thread(runnable);
-                thread.start();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
             }
+        };
 
-            catch(NumberFormatException e) {
-                JOptionPane.showMessageDialog(this.panel1, "Die Eingabe ist ungültig");
-            }
-        });
+        sw.execute();
     }
-
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Teilbare Zahlen");
